@@ -10,9 +10,9 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     api_url: str = "http://localhost:8080"
-    api_key: str = "de8c861535e3a13"
-    api_secret: str = "b95d18407034051"
-    auth_token: str = "token de8c861535e3a13:b95d18407034051"
+    api_key: str = "a8698d14bf2d89b"
+    api_secret: str = "1b1913bc8c69c2b"
+    auth_token: str = "token a8698d14bf2d89b:1b1913bc8c69c2b"
 
 
 settings = Settings()
