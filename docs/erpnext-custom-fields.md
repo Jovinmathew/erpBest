@@ -2,6 +2,10 @@
 
 Manual checklist for Frappe's Customize Form — done once, by hand, before `/implement` can build against Material Request or RFQ endpoints. See ADR 0001 for why this is manual rather than a Frappe custom app, and ADR 0002 for why actor fields are plain strings.
 
+**Status:** fully provisioned against `erpnext.jovsden.space` (Frappe/ERPNext 16.23.0) on 2026-07-30 and verified field-by-field over the REST API. The boxes below are deliberately left unticked so this stays reusable for provisioning a fresh instance.
+
+**Every fieldname below is stored with a `custom_` prefix** — `bff_status` is really `custom_bff_status`, `sent_at` is really `custom_sent_at`, and so on. Frappe v15+ auto-prefixes anything added through Customize Form, and the prefix exists so a future ERPNext upgrade can't collide with a name we picked. Fields created over the REST API are *not* auto-prefixed, so pass the prefix explicitly if provisioning that way. The BFF reads and writes the prefixed names; this doc lists them bare for readability, and the public API in `docs/api-shapes.md` exposes neither form — it maps to its own vocabulary.
+
 **On the Module field:** the three *new* doctypes below each need a Module picked at creation time; the custom fields added to native doctypes don't (Customize Form files those under `Custom` automatically). Since ADR 0001 means no custom Frappe app — and with developer mode off Frappe forces `custom = 1` — the choice is cosmetic: it drives workspace/module-list grouping only, writes nothing to disk, and doesn't affect the REST path (`/api/resource/BFF Rejection` either way). Modules are assigned per doctype below.
 
 ## New child doctype: "BFF Rejection"
@@ -13,7 +17,7 @@ Reused as a Table field on both Material Request and Request for Quotation.
 - [ ] `reason` — Small Text
 - [ ] `by` — Data
 - [ ] `at` — Datetime
-- [ ] `snapshot` — Long Text (JSON) — a serialized copy of the parent's live-editable fields (MR: `items`/`required_by`/`raised_for`) at the moment of this rejection. Chosen over relying on Frappe's native document version/change-log: self-contained on the rejection entry itself, no dependency on ERPNext-side change-tracking config.
+- [ ] `snapshot` — JSON — a serialized copy of the parent's live-editable fields (MR: `items`/`required_by`/`raised_for`) at the moment of this rejection. Chosen over relying on Frappe's native document version/change-log: self-contained on the rejection entry itself, no dependency on ERPNext-side change-tracking config.
 
 ## Material Request (native doctype) — custom fields
 
@@ -46,9 +50,9 @@ Items and `required_by` use Material Request's native fields as-is — no custom
 
 ## Request for Quotation Supplier (native child table) — custom fields
 
-All nullable except `quote_status`. One row is appended per new quote Version; the row Frappe creates natively when a supplier is added to the RFQ becomes the first (empty) row.
+All nullable except `bff_quote_status`. One row is appended per new quote Version; the row Frappe creates natively when a supplier is added to the RFQ becomes the first (empty) row.
 
-- [ ] `quote_status` — Select: `PENDING`, `DECLINED`, `QUOTED` — explicit per-supplier state, not inferred from field presence. Starts `PENDING` on send; → `DECLINED` on decline; → `QUOTED` the moment a Version is submitted, including flipping back from `DECLINED` if a supplier quotes after declining (decline stays visible as history, it just stops being the current state — quoting after declining is allowed, not blocked).
+- [ ] `bff_quote_status` — Select: `PENDING`, `DECLINED`, `QUOTED` — explicit per-supplier state, not inferred from field presence. Starts `PENDING` on send; → `DECLINED` on decline; → `QUOTED` the moment a Version is submitted, including flipping back from `DECLINED` if a supplier quotes after declining (decline stays visible as history, it just stops being the current state — quoting after declining is allowed, not blocked).
 - [ ] `version_index` — Int
 - [ ] `price` — Currency
 - [ ] `currency` — Data
@@ -59,7 +63,9 @@ All nullable except `quote_status`. One row is appended per new quote Version; t
 - [ ] `declined_at` — Datetime
 - [ ] `decline_reason` — Small Text
 
-**Known wrinkle:** native RFQ Supplier's own "quote status" indicator assumes one row per supplier; appending multiple version-rows per supplier bends that assumption. Sanity-check it once this is built and testable — if the native indicator misbehaves, it's safe to ignore, since `received_at`/`declined_at`/our own `quote_status` here are the real source of truth, not Frappe's own indicator.
+**Why `bff_quote_status` and not `quote_status`:** RFQ Supplier already has a *native* `quote_status` — a Select with exactly two options, `Pending` and `Received` (confirmed live on v16.23.0). It can't be reused: it has no way to express `DECLINED`, which is a first-class state here carrying `declined_at`/`decline_reason` and the flip-back-to-`QUOTED` rule. Repurposing it by overriding its Options would also collide with ERPNext's own code, which writes `Received` into that field on the supplier-portal path. Ours is therefore a separate field, named to match the `bff_status` convention on MR and RFQ.
+
+**Known wrinkle:** native RFQ Supplier's own "quote status" indicator assumes one row per supplier; appending multiple version-rows per supplier bends that assumption. Sanity-check it once this is built and testable — if the native indicator misbehaves, it's safe to ignore, since `received_at`/`declined_at`/our own `bff_quote_status` are the real source of truth, not Frappe's own indicator.
 
 ## Purchase Order (native doctype) — custom fields
 
@@ -78,7 +84,7 @@ Supports multiple partial receipts against one Purchase Order (native `per_recei
 
 ## New doctype: "Process Sheet"
 
-**Module: `Manufacturing`.** See ADR 0003 for why this is a new doctype rather than native Work Order/Job Card. Created with header fields only — `operations` starts empty; rows get added later as work actually happens (see Process Sheet Operation below). `attachment` is set via Frappe's native `upload_file` endpoint first (getting back a file URL), then referenced here — this endpoint itself stays plain JSON, no multipart handling.
+**Module: `Manufacturing`.** Autoname `PS-.YYYY.-.#####`, giving the `PS-2026-00005` form `docs/api-shapes.md` uses. See ADR 0003 for why this is a new doctype rather than native Work Order/Job Card. Created with header fields only — `operations` starts empty; rows get added later as work actually happens (see Process Sheet Operation below). `attachment` is set via Frappe's native `upload_file` endpoint first (getting back a file URL), then referenced here — this endpoint itself stays plain JSON, no multipart handling.
 
 - [ ] `client` — Data
 - [ ] `drawing_no` — Data
