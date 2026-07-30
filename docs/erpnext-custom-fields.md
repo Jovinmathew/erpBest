@@ -2,9 +2,13 @@
 
 Manual checklist for Frappe's Customize Form — done once, by hand, before `/implement` can build against Material Request or RFQ endpoints. See ADR 0001 for why this is manual rather than a Frappe custom app, and ADR 0002 for why actor fields are plain strings.
 
+**On the Module field:** the three *new* doctypes below each need a Module picked at creation time; the custom fields added to native doctypes don't (Customize Form files those under `Custom` automatically). Since ADR 0001 means no custom Frappe app — and with developer mode off Frappe forces `custom = 1` — the choice is cosmetic: it drives workspace/module-list grouping only, writes nothing to disk, and doesn't affect the REST path (`/api/resource/BFF Rejection` either way). Modules are assigned per doctype below.
+
 ## New child doctype: "BFF Rejection"
 
 Reused as a Table field on both Material Request and Request for Quotation.
+
+**Module: `Buying`.** No "matching" answer exists — this straddles two parents in different native modules (Material Request is under Stock, Request for Quotation under Buying). Buying wins because a rejection here is a procurement-approval artifact, not a stock one.
 
 - [ ] `reason` — Small Text
 - [ ] `by` — Data
@@ -74,7 +78,7 @@ Supports multiple partial receipts against one Purchase Order (native `per_recei
 
 ## New doctype: "Process Sheet"
 
-See ADR 0003 for why this is a new doctype rather than native Work Order/Job Card. Created with header fields only — `operations` starts empty; rows get added later as work actually happens (see Process Sheet Operation below). `attachment` is set via Frappe's native `upload_file` endpoint first (getting back a file URL), then referenced here — this endpoint itself stays plain JSON, no multipart handling.
+**Module: `Manufacturing`.** See ADR 0003 for why this is a new doctype rather than native Work Order/Job Card. Created with header fields only — `operations` starts empty; rows get added later as work actually happens (see Process Sheet Operation below). `attachment` is set via Frappe's native `upload_file` endpoint first (getting back a file URL), then referenced here — this endpoint itself stays plain JSON, no multipart handling.
 
 - [ ] `client` — Data
 - [ ] `drawing_no` — Data
@@ -88,7 +92,7 @@ See ADR 0003 for why this is a new doctype rather than native Work Order/Job Car
 
 ## New child doctype: "Process Sheet Operation"
 
-Reused as a Table field on Process Sheet. Deliberately has no field describing *what* the operation technically entails (no "operation description" text) — that lives only in the Process Sheet's `attachment`, so nobody (Programmer or Operator) has to retype the drawing's own spec into the system. Rows exist only for operations someone has actually started, created incrementally by whoever executes them — not pre-populated as a full plan at Process Sheet creation time. A rework attempt appends a new row with the same `op_no` rather than overwriting the failed one. `rework`/`rejection` are independent, manually-set facts — never auto-derived from a Quality Inspection's outcome.
+**Module: `Manufacturing`** (same as its parent). Reused as a Table field on Process Sheet. Deliberately has no field describing *what* the operation technically entails (no "operation description" text) — that lives only in the Process Sheet's `attachment`, so nobody (Programmer or Operator) has to retype the drawing's own spec into the system. Rows exist only for operations someone has actually started, created incrementally by whoever executes them — not pre-populated as a full plan at Process Sheet creation time. A rework attempt appends a new row with the same `op_no` rather than overwriting the failed one. `rework`/`rejection` are independent, manually-set facts — never auto-derived from a Quality Inspection's outcome.
 
 - [ ] `op_no` — Int
 - [ ] `machine` — Data
