@@ -4,6 +4,12 @@ Tickets for this repo live as cards on a Trello board. There is no `gh`-style CL
 
 **Specs are not tickets.** A spec (PRD) is a long document and lives in the repo under `docs/specs/`, versioned alongside `CONTEXT.md` and `docs/adr/`. A card is one independently-completable unit of work that *links* to the relevant spec sections — it never restates them. Trello's card description limit (16,384 chars) is a feature here, not an obstacle: if a card body wants to be longer than that, it's a spec, not a card. Anything that turns out to be a durable *decision* graduates out of a card comment into a new ADR.
 
+## This repo's board
+
+**erpBest — Procurement & Stock Pilot**: <https://trello.com/b/Uc66L0xl/erpbest-procurement-stock-pilot> (board id `Uc66L0xl`, private).
+
+Lists: `Backlog → Ready → In Progress → Review → Done`. Labels: the five triage labels below, plus `blocked`.
+
 ## Credentials
 
 An API key and token are required on every call, as query params (`key=`/`token=`). Generate them at <https://trello.com/power-ups/admin> — create a Power-Up, then generate an API key, then a token.
