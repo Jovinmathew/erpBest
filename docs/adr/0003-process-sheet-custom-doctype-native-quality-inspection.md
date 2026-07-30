@@ -25,3 +25,10 @@ Process Sheet is a single combined record per job — routing definition and exe
 - Whether Frappe's Quality Inspection `reference_type` accepts a custom doctype (Process Sheet) is an assumption, not yet verified against the ERPNext version in use — verify before building against it.
 - Roles (Programmer/Operator/Inspector) have no defined permission boundaries yet; this is deliberate, not an oversight — expect to revisit once usage patterns are clearer.
 - See `docs/erpnext-custom-fields.md` for the new doctype/field provisioning checklist.
+
+**Refinements from the later API-shape review** (see `docs/api-shapes.md` for the concrete request/response shapes):
+- Process Sheet Operation carries no field describing what an operation technically entails — that duplicated the attached drawing for no payoff, since the Programmer already produces it as a document. Rows only ever record who/what/when (machine, operator, qty, timing), never a spec.
+- Process Sheet is created with header fields only (`operations` starts empty) — the full 12-row plan is never pre-populated from the Programmer's document; rows get added incrementally by whoever actually executes each operation.
+- `rework`/`rejection` on an Operation are independently, manually recorded facts — confirmed never auto-set by a failed Stage Inspection's outcome.
+- Repeat orders against the same drawing confirmed to create a fully new, independent Process Sheet each time (no link back) — reinforces the template/run split above as still-deferred, not resolved.
+- The upstream question of how a job enters the system at all was resolved separately as ERPNext's native **Sales Order** (see CONTEXT.md's Sales Order section) — deliberately not yet linked to Process Sheet.
