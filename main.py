@@ -4,15 +4,20 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import Depends, FastAPI, Request
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    api_url: str = "http://localhost:8080"
-    api_key: str = "a8698d14bf2d89b"
-    api_secret: str = "1b1913bc8c69c2b"
-    auth_token: str = "token a8698d14bf2d89b:1b1913bc8c69c2b"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    api_url: str
+    api_key: SecretStr
+    api_secret: SecretStr
+
+    @property
+    def auth_token(self) -> str:
+        return f"token {self.api_key.get_secret_value()}:{self.api_secret.get_secret_value()}"
 
 
 settings = Settings()

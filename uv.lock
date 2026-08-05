@@ -111,7 +111,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.139.2" },
-    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pydantic-settings", extras = ["dotenv"], specifier = ">=2.14.2" },
 ]
 
 [[package]]
