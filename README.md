@@ -7,6 +7,7 @@ A FastAPI BFF in front of a self-hosted ERPNext instance, covering a manufacturi
 ## Where things live
 
 - **`CONTEXT.md`** — the domain glossary: roles, terms, what to call things and what to avoid calling them.
+- **`docs/specs/`** — implementation specs (PRDs). `0001` covers both domains end to end and is what the Trello cards are cut from.
 - **`docs/adr/`** — architecture decisions, numbered in order:
   - `0001` — ERPNext native doctypes + custom fields as sole persistence, no local DB
   - `0002` — actor identity via a static token table, not Frappe User
